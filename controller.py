@@ -13,6 +13,11 @@ class windowController:
     def menu_open(self) -> None:
         filename = sg.popup_get_file('message will not be shown', no_window=True)
         self.image = filename
+        
+        if ".jpg" in self.image:
+            sg.popup_notify(title="Erro", message="Não é possivél abrir arquivos do tipo JPG")
+            return
+        
         self.window["display_img"].update(filename=filename, visible=True)
         self.window['display_img'].Position = (0,0)
 
@@ -41,6 +46,9 @@ class windowController:
             return
         
         #Tenta salvar a imagem
+        image_name = self.image.split('.')[0].split('/')[-1]
+        name = sg.popup_get_text('File name: ', default_text=image_name)
+        
         try:
             outfile = filename + '.jpg'
             img.save(outfile)
