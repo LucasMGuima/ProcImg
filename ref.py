@@ -1,6 +1,7 @@
 #Referencias de nome
 class MENU:
-    CLOSE = "Close"
-    OPEN = "Open"
-    SAVE = "Save"
-    ABOUT = "About..."
+    CLOSE = "Fechar"
+    OPEN = "Abrir"
+    SAVE = "Salvar"
+    DADOS = "Local"
+    ABOUT = "Sobre"
