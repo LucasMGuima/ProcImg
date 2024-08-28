@@ -1,6 +1,6 @@
 import PySimpleGUI as sg
 
-from PIL import Image
+from PIL import Image, ImageFilter
 from ref import MENU
 
 import io
@@ -9,6 +9,7 @@ class windowController:
     def __init__(self, window: sg.Window) -> None:
         self.winABOUT_activated = False
         self.image = None
+        self.previus_state = []
 
         self.window = window
 
@@ -99,7 +100,7 @@ class windowController:
         if image:
             width, height = image.size
             pixels = image.load()
-            previus_state = image.copy()
+            self.previus_state.append(image.copy())
 
             for w in range(width):
                 for h in range(height):
@@ -117,7 +118,7 @@ class windowController:
         if image:
             width, height = image.size
             pixels = image.load()
-            previus_state = image.copy()
+            self.previus_state.append(image.copy())
 
             for w in range(width):
                 for h in range(height):
@@ -139,7 +140,7 @@ class windowController:
         if image:
             width, height = image.size
             pixels = image.load()
-            previus_state = image.copy()
+            self.previus_state.append(image.copy())
 
             for w in range(width):
                 for h in range(height):
@@ -148,6 +149,21 @@ class windowController:
             
             self._show_image()
 
+    def apply_four_bits_filter(self):
+        image = self.image
+        self.previus_state.append(image.copy())
+
+        if image:
+            self.image = image.convert("P", palette="Image.ADAPTIVE", colors=4)
+            self._show_image()
+        else:
+            sg.popup("Não foi possivel converter a imagem")
+
+    def apply_blur(self):
+        image = self.image
+        self.previus_state.append(image.copy())
+
+        pass
 
     def save_file(self) -> None:
         if self.image == None:

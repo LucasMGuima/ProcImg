@@ -8,3 +8,5 @@ class MENU:
     GRAY = "Gray"
     SEPIA = "Sepia"
     INVERTER = "Inverter Cor"
+    CONVERT4COR = "Converte 4 Cores"
+    BLUR = "Blur"
