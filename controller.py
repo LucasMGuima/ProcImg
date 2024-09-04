@@ -162,7 +162,6 @@ class windowController:
     def apply_blur(self):
         image = self.image
         self.previus_state.append(image.copy())
-
         pass
 
     def save_file(self) -> None:

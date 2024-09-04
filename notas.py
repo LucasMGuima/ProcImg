@@ -4,12 +4,38 @@ import io
 import os
 import webbrowser
 import requests
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 image_atual = None
 previous_state = None
 image_path = None
 max_width = 800
 max_height = 600
+
+def calculate_histogram(image):
+    if image.mode != 'L':
+        image = image.convert('L')
+    histogram = image.histogram()
+    
+    return histogram
+
+def show_histogram(image):
+    histogram = calculate_histogram(image)
+    
+    layout = [
+        [sg.Canvas(key='-CANVAS-')],
+        [sg.Button('Fechar')]
+    ]
+    
+    window = sg.Window('Histograma', layout, finalize=True)
+    
+    fig, ax = plt.subplots()
+    ax.hist(range(256), bins=256, weights=histogram)
+    
+    canvas_elem = window['-CANVAS-']
+    canvas = FigureCanvasTkAgg(fig, canvas_elem.Widget)
+    canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
 
 def url_download(url):
     global image_atual
@@ -32,7 +58,7 @@ def show_image():
         #Converte a image PIL para o formato que o PySimpleGUI
         img_bytes = io.BytesIO() #Permite criar objetos semelhantes a arquivos na memÃ³ria RAM
         resized_img.save(img_bytes, format='PNG')
-        window['-IMAGE-'].update(data=img_bytes.getvalue())
+        window['-IMAGE-'].draw_image(data=img_bytes.getvalue(), location=(0,400))
     except Exception as e:
         sg.popup(f"Erro ao exibir a imagem: {str(e)}")
 
@@ -412,6 +438,36 @@ def apply_maxfilter_filter():
     except Exception as e:
         sg.popup(f"Erro ao aplicar o filtro máximo: {str(e)}")
 
+def crop_selected_area(x1, y1, x2, y2):
+    global image_atual
+    global previous_state
+
+    width_origem, height_origem = image_atual.size
+    width_atual, height_atual = window['-IMAGE-'].Size
+
+    width_propotion = width_atual/width_origem
+    height_propotion = height_atual/height_origem
+
+    #Inverte o inicio com o fim se precisar
+    if x1 > x2 or y1 > y2:
+        temp = x1
+        x1 = x2
+        x2 = temp
+
+        temp = y1
+        y1 = y2
+        y2 = temp
+
+    x1 *= width_propotion
+    y1 *= height_propotion
+    
+    x2 *= width_propotion
+    y2 *= height_propotion
+
+    previous_state = image_atual.copy()
+    image_atual = image_atual.crop((x1, y1, x2, y2))
+    show_image()
+
 
 layout = [
     [sg.Menu([
@@ -428,11 +484,12 @@ layout = [
             ['Sobre a image', ['Informacoes']], 
             ['Sobre', ['Desenvolvedor']]
         ])],
-    [sg.Image(key='-IMAGE-', size=(800, 600))],
+    [sg.Graph(key='-IMAGE-', canvas_size=(800, 600), change_submits=True, drag_submits=True, graph_bottom_left=(0, 0), graph_top_right=(400, 400))],
 ]
 
 window = sg.Window('Photo Shoping', layout, finalize=True)
 
+selecting = False
 while True:
     event, values = window.read()
 
@@ -493,5 +550,16 @@ while True:
         apply_maxfilter_filter()
     elif event == 'Desenvolvedor':
         sg.popup('Desenvolvido por [Seu Nome] - BCC 6º Semestre')
-
+    elif event.startswith('-IMAGE-'):
+        if '-IMAGE-' in values and values['-IMAGE-'] is not None:
+            if event.endswith('-IMAGE-+UP'):
+                selecting = False
+                end_x, end_y = values['-IMAGE-']
+                end_y = 600 - end_y
+                crop_selected_area(start_x, start_y, end_x, end_y)
+            elif not selecting:
+                selecting = True
+                start_x, start_y = values['-IMAGE-']
+                start_y = 600 - start_y
+            
 window.close()
